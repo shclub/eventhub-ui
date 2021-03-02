@@ -9,7 +9,9 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.control.SelectionMode;
 import javafx.scene.control.cell.PropertyValueFactory;
 
 import com.azure.messaging.eventhubs.EventHubClientBuilder;
@@ -20,7 +22,7 @@ import com.azure.messaging.eventhubs.models.EventContext;
 
 public class MainController {
     @FXML
-    public TableView table;
+    public TableView<EventHubMessage> table;
 
     @FXML
     public TableColumn partitionCol;
@@ -39,6 +41,9 @@ public class MainController {
 
     @FXML
     public Button connect;
+
+    @FXML
+    public TextArea msg;
 
     private final ObservableList<EventHubMessage> data = FXCollections.observableArrayList();
 
@@ -59,6 +64,14 @@ public class MainController {
             new PropertyValueFactory<EventHubMessage, String>("body")
         );
         table.setItems(data);
+
+        table.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
+        table.getSelectionModel().setCellSelectionEnabled(true);
+        table.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
+            if(newSelection != null){
+                msg.setText(newSelection.getBody());
+            }
+        });
     }
 
     @FXML
