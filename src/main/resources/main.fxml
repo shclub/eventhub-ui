@@ -55,12 +55,12 @@
       <menus>
         <Menu mnemonicParsing="false" text="File">
           <items>
-            <MenuItem mnemonicParsing="false" text="Quit" />
+            <MenuItem fx:id="quit" mnemonicParsing="false" onAction="#handleDoQuit" text="Quit" />
           </items>
         </Menu>
         <Menu mnemonicParsing="false" text="Help">
           <items>
-            <MenuItem mnemonicParsing="false" text="About EventHub UI" />
+            <MenuItem fx:id="help" mnemonicParsing="false" onAction="#handleDoHelp" text="About EventHub UI" />
           </items>
         </Menu>
       </menus>
@@ -104,9 +104,10 @@
                <content>
                   <TableView fx:id="table" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="400.0" prefWidth="417.0">
                     <columns>
-                      <TableColumn fx:id="partitionCol" prefWidth="75.0" text="Partition" />
-                      <TableColumn fx:id="sequenceCol" prefWidth="75.0" text="Sequence" />
-                        <TableColumn fx:id="bodyCol" prefWidth="265.0" text="Body" />
+                      <TableColumn fx:id="partitionCol" prefWidth="58.0" text="Partition" />
+                      <TableColumn fx:id="sequenceCol" prefWidth="67.0" text="Sequence" />
+                        <TableColumn fx:id="bodyCol" prefWidth="226.0" text="Body" />
+                        <TableColumn fx:id="timestampCol" prefWidth="139.0" text="Timestamp" />
                     </columns>
                   </TableView>
                </content>
@@ -124,12 +125,18 @@
                            </font>
                         </Label>
                         <TextArea fx:id="msg" editable="false" maxWidth="1.7976931348623157E308" prefHeight="200.0" prefWidth="200.0" wrapText="true" />
-                        <Separator prefWidth="200.0" />
-                        <Label text="Headers">
+                        <Separator prefHeight="21.0" prefWidth="220.0" />
+                        <Label text="Properties">
                            <VBox.margin>
                               <Insets left="10.0" />
                            </VBox.margin>
                         </Label>
+                        <TableView fx:id="properties" prefHeight="301.0" prefWidth="220.0">
+                          <columns>
+                            <TableColumn fx:id="keyCol" prefWidth="81.0" text="Key" />
+                            <TableColumn fx:id="valueCol" prefWidth="125.0" text="Value" />
+                          </columns>
+                        </TableView>
                      </children>
                   </VBox>
                </children>

@@ -1,20 +1,23 @@
 package eu.adrianistan
 
 import javafx.fxml.FXML
-import eu.adrianistan.EventHubMessage
-import javafx.collections.ObservableList
 import javafx.collections.FXCollections
 import com.azure.messaging.eventhubs.EventProcessorClient
 import javafx.scene.control.cell.PropertyValueFactory
 import javafx.beans.value.ObservableValue
 import com.azure.messaging.eventhubs.EventProcessorClientBuilder
 import com.azure.messaging.eventhubs.EventHubClientBuilder
-import eu.adrianistan.NullCheckpointStore
 import com.azure.messaging.eventhubs.models.ErrorContext
 import com.azure.messaging.eventhubs.models.EventContext
+import javafx.application.Platform
 import javafx.event.ActionEvent
 import javafx.scene.control.*
+import javafx.scene.control.cell.MapValueFactory
+import kotlinx.serialization.encodeToString
+import java.time.Instant
 import java.util.function.Consumer
+import kotlin.system.exitProcess
+import kotlinx.serialization.json.Json
 
 class MainController {
     @FXML
@@ -30,6 +33,18 @@ class MainController {
     var bodyCol: TableColumn<*, *>? = null
 
     @FXML
+    var timestampCol: TableColumn<*, *>? = null
+
+    @FXML
+    var properties: TableView<EventHubProperty>? = null
+
+    @FXML
+    var keyCol: TableColumn<*, *>? = null
+
+    @FXML
+    var valueCol: TableColumn<*, *>? = null
+
+    @FXML
     var connectionString: TextField? = null
 
     @FXML
@@ -40,19 +55,30 @@ class MainController {
 
     @FXML
     var msg: TextArea? = null
+
     private val data = FXCollections.observableArrayList<EventHubMessage>()
     private var eventProcessorClient: EventProcessorClient? = null
+
+    private val format = Json { prettyPrint = true }
+
     fun initialize() {
         partitionCol!!.cellValueFactory = PropertyValueFactory<EventHubMessage, String>("partition")
         sequenceCol!!.cellValueFactory = PropertyValueFactory<EventHubMessage, Long>("sequence")
         bodyCol!!.cellValueFactory = PropertyValueFactory<EventHubMessage, String>("body")
+        timestampCol!!.cellValueFactory = PropertyValueFactory<EventHubMessage, Instant>("timestamp")
+
+        keyCol!!.cellValueFactory = PropertyValueFactory<EventHubProperty, String>("key")
+        valueCol!!.cellValueFactory = PropertyValueFactory<EventHubProperty, String>("value")
+
         table!!.items = data
         table!!.selectionModel.selectionMode = SelectionMode.SINGLE
         table!!.selectionModel.isCellSelectionEnabled = true
         table!!.selectionModel.selectedItemProperty()
             .addListener { obs: ObservableValue<out EventHubMessage>?, oldSelection: EventHubMessage?, newSelection: EventHubMessage? ->
                 if (newSelection != null) {
-                    msg!!.text = newSelection.body
+                    val element = Json.parseToJsonElement(newSelection.body)
+                    msg!!.text = format.encodeToString(element)
+                    properties!!.items = FXCollections.observableList(newSelection.properties)
                 }
             }
     }
@@ -78,13 +104,32 @@ class MainController {
         }
     }
 
+    @FXML
+    fun handleDoQuit(event: ActionEvent?) {
+        Platform.exit()
+        exitProcess(0)
+    }
+
+    @FXML
+    fun handleDoHelp(event: ActionEvent?) {
+        val alert = Alert(Alert.AlertType.INFORMATION)
+        alert.title = "About EventHub UI"
+        alert.headerText = "EventHub UI 1.0.0"
+        alert.contentText = "EventHub UI was made by Adrián Arroyo Calle (https://adrianistan.eu). EventHub is a trademark of Microsoft"
+        alert.show()
+    }
+
     val processEvent = Consumer { eventContext: EventContext ->
         System.out.printf("Message received: %s \n", eventContext.eventData.bodyAsString)
         data.add(
             EventHubMessage(
                 eventContext.partitionContext.partitionId,
                 eventContext.eventData.sequenceNumber,
-                eventContext.eventData.bodyAsString
+                eventContext.eventData.bodyAsString,
+                eventContext.eventData.enqueuedTime,
+                eventContext.eventData.properties.map {
+                    EventHubProperty(it.key, it.value.toString())
+                }
             )
         )
     }
