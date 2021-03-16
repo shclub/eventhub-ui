@@ -6,6 +6,7 @@ A graphical interface to watch your EventHub in real time. Useful to know what i
 ## Running
 
 EventHub UI is a Kotlin + JavaFX app, built using Maven. To run the app, download the code and then execute:
+
     $ mvn clean javafx:run
 
 ## TODO
