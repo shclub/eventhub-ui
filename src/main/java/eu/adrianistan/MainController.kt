@@ -12,12 +12,10 @@ import com.azure.messaging.eventhubs.models.EventContext
 import javafx.application.Platform
 import javafx.event.ActionEvent
 import javafx.scene.control.*
-import javafx.scene.control.cell.MapValueFactory
-import kotlinx.serialization.encodeToString
 import java.time.Instant
 import java.util.function.Consumer
 import kotlin.system.exitProcess
-import kotlinx.serialization.json.Json
+import com.google.gson.GsonBuilder
 
 class MainController {
     @FXML
@@ -59,8 +57,6 @@ class MainController {
     private val data = FXCollections.observableArrayList<EventHubMessage>()
     private var eventProcessorClient: EventProcessorClient? = null
 
-    private val format = Json { prettyPrint = true }
-
     fun initialize() {
         partitionCol!!.cellValueFactory = PropertyValueFactory<EventHubMessage, String>("partition")
         sequenceCol!!.cellValueFactory = PropertyValueFactory<EventHubMessage, Long>("sequence")
@@ -76,8 +72,10 @@ class MainController {
         table!!.selectionModel.selectedItemProperty()
             .addListener { obs: ObservableValue<out EventHubMessage>?, oldSelection: EventHubMessage?, newSelection: EventHubMessage? ->
                 if (newSelection != null) {
-                    val element = Json.parseToJsonElement(newSelection.body)
-                    msg!!.text = format.encodeToString(element)
+                    val gson = GsonBuilder().setPrettyPrinting().create()
+                    val data = gson.fromJson(newSelection.body, Object::class.java)
+                    val formatJson = gson.toJson(data)
+                    msg!!.text = formatJson
                     properties!!.items = FXCollections.observableList(newSelection.properties)
                 }
             }
