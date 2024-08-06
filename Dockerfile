@@ -10,7 +10,8 @@ COPY pom.xml ./
 COPY src ./src
 
 COPY . ./
-RUN mvn package
+#RUN mvn package
+RUN mvn clean javafx:run
 
 #
 # Package stage
